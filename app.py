@@ -9,14 +9,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 app.secret_key='super_secret'
-class Shipment_Item(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    count = db.Column(db.Integer)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return '<Shipment %r>' % self.name
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -58,53 +50,41 @@ def update(id):
     else:
         return render_template('update_item.html', item=item_to_update)
 
-@app.route('/ship_delete/<int:id>')
-def ship_delete(id):
-    item_to_del = Shipment_Item.query.get_or_404(id)
-    try:
-        db.session.delete(item_to_del)
-        db.session.commit()
-        return redirect('/ship')
-    except:
-        return 'Error deleteing item'        
-
-
+       
 
 @app.route('/ship', methods=['POST','GET'])
 def ship():
-    ship_list = Shipment_Item.query.order_by(Shipment_Item.date_created).all()
-
+    shipmentComplete = False
     inventory = Item.query.order_by(Item.date_created).all()
     if request.method == 'POST':
-        ship_list = request.form.getlist('ship')
-        print(ship_list)
-        for item in ship_list:
-            new_ship_item = Shipment_Item(name=item)
-            try:
-                db.session.add(new_ship_item)
-                db.session.commit()
-            except:
+        ids = request.form.getlist('ship')
+        ship_counts = request.form.getlist('ship_count')
+
+        if ship_counts[0] == '':
+            return redirect('/ship')
+
+
+        for id in ids:
+            item_to_ship = Item.query.get_or_404(id)
+
+            item_to_ship.count = item_to_ship.count - int(ship_counts[(int(id)-1)])
+            if item_to_ship.count < 0:
                 return render_template("error.html")
-        
+
+            if item_to_ship.count == 0:
+                db.session.delete(item_to_ship)    
+            try:
+                db.session.commit()
+                shipmentComplete = True
+            except:
+                return render_template("error.html")    
+
+        if shipmentComplete:
+            flash("Your shipment has been shipped out.")
         return redirect('/ship')
     else: 
-        return render_template("shipment.html", items=inventory, shipment=ship_list) 
+        return render_template("shipment.html", items=inventory) 
 
-
-@app.route('/shipout', methods=['GET', 'POST'])
-def shipout():
-    ship_list = Shipment_Item.query.order_by(Shipment_Item.date_created).all()
-    if request.method == 'POST':
-        for item in range(len(ship_list)):
-            item_to_ship = ship_list[item]
-
-            db.session.delete(item_to_ship)
-            db.session.commit()
-        
-        flash("Shipment sent out!")
-        return redirect('/ship')             
-    else:
-        return redirect('/ship')  
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -115,8 +95,18 @@ def home():
        item_name = request.form['name']
        item_price = request.form['price']
        item_count = request.form['count']
+       
+       # handling blank forms
+       if not item_price or not item_count or not item_name:
+           return redirect('/')
 
-       # Logic for if an item was already created 
+       # handling zero  
+       if int(item_price) == 0 or int(item_count) == 0:
+           
+           return redirect('/') 
+
+       # logic for if an item was already created
+       # we want to add it to the existing item 
        for item in inventory:
            if (item_name == item.name) and (int(item_price) == item.price):
                item.count = int(item_count) + item.count
