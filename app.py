@@ -1,4 +1,3 @@
-from itertools import count
 from flask import Flask, render_template, redirect, request, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -60,7 +59,7 @@ def ship():
         ids = request.form.getlist('ship')
         ship_counts = request.form.getlist('ship_count')
 
-        if ship_counts[0] == '':
+        if ship_counts is None:
             return redirect('/ship')
 
         # handle the sending out a shipment
