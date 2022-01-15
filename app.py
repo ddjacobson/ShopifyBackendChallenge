@@ -1,15 +1,15 @@
 from itertools import count
-from os import error, name
-import re
 from flask import Flask, render_template, redirect, request, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+# initalize application
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 app.secret_key='super_secret'
 
+# initialize database
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable=False)
@@ -21,9 +21,9 @@ class Item(db.Model):
     def __repr__(self):
        return '<Item %r>' % self.id
 
-
 @app.route('/delete/<int:id>')
 def delete(id):
+    # delete the item from the database
     item_to_del = Item.query.get_or_404(id)
     try:
         db.session.delete(item_to_del)
@@ -36,6 +36,7 @@ def delete(id):
 @app.route('/update/<int:id>', methods=['GET','POST'])
 def update(id):
     item_to_update = Item.query.get_or_404(id)
+    # get the data to change, and update database
     if request.method == 'POST':
         item_to_update.name = request.form['name']
         item_to_update.price = request.form['price']
@@ -50,12 +51,11 @@ def update(id):
     else:
         return render_template('update_item.html', item=item_to_update)
 
-       
-
 @app.route('/ship', methods=['POST','GET'])
 def ship():
     shipmentComplete = False
     inventory = Item.query.order_by(Item.date_created).all()
+
     if request.method == 'POST':
         ids = request.form.getlist('ship')
         ship_counts = request.form.getlist('ship_count')
@@ -63,7 +63,7 @@ def ship():
         if ship_counts[0] == '':
             return redirect('/ship')
 
-
+        # handle the sending out a shipment
         for id in ids:
             item_to_ship = Item.query.get_or_404(id)
 
@@ -81,14 +81,14 @@ def ship():
 
         if shipmentComplete:
             flash("Your shipment has been shipped out.")
+
         return redirect('/ship')
     else: 
         return render_template("shipment.html", items=inventory) 
 
-
-
 @app.route("/", methods=['GET', 'POST'])
 def home():
+    # get inventroy to display
     inventory = Item.query.order_by(Item.date_created).all()
 
     if request.method == 'POST':
@@ -116,7 +116,6 @@ def home():
                except:
                    return 'Error adding object to database'
             
-
        new_item = Item(name=item_name, price=item_price, count=item_count) 
     
        try:
@@ -128,7 +127,6 @@ def home():
     else:
         return render_template("index.html", items=inventory)
     
-
 
 if __name__ == '__main__':
     app.run(debug=True)    

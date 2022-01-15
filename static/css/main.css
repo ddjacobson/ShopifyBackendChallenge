@@ -9,6 +9,10 @@ body {
     
 }
 
+ul {
+list-style-type: none;
+}
+
 .inventory {
     margin-left: auto;
     margin-right: auto;

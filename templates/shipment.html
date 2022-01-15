@@ -26,39 +26,25 @@
                 <tr style="margin-top: 10px;">
                     <td>{{ item.name }}</td>
                     <td>${{ item.price }}</td>
-                    <td>{{ item.count }}</td>
+                    <td><input type="text" name="ship_count" style="width: 20px;">/{{ item.count }}</td>
                     <td>${{ item.price*item.count}}</td>
                     <td>
-                        <input type="checkbox" value="{{ item.name }}" name="ship" id="ship">
+                        <input type="checkbox" value="{{ item.id }}" name="ship" id="ship">
                     </td>
                 </tr>
             {% endfor %}
         </table>
         <input type="submit" value="Add to Shipment">    
     </form>
-
-
-    <div id="shipment">
-        <h2>Current Shipment</h2>
-        <form action="/shipout" method="POST">
-            <table class="inventory">
-                <tr>
-                    <th>Product Name</th>
-                    <th>Action</th>
-                </tr>
-                {% for ship_item in shipment %}
-                <tr>
-                    <td>{{ ship_item.name }}</td>
-                    <td>
-                        <a href="/ship_delete/{{ship_item.id}}">Delete</a>
-                        <br>
-                    </td>
-                </tr>
-                {% endfor %}    
-            </table>
-            <input type="submit" value="Ship!">
-    
-        </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
     </div>
 
