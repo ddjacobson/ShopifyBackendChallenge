@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>Inventory App</title>
+{% endblock %}
+
+{% block action %} 
+    <a href="/">Back to Home</a>
+{% endblock %}
+
+
+{% block body %}
+<div>
+<h2>Error in Form Submission!</h2>
+<h4>Make sure you have entered an item name, price (number), and count (number)</h4>
+<h4>If you were creating a shipment, make sure you do not ship out more items than you have.</h4>
+<a href="/">Back to Home</a>
+
+
+</div>
+
+
+{% endblock %}
